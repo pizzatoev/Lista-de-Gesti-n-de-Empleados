@@ -2,18 +2,28 @@ package com.example.gestionempleados.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.gestionempleados.R;
 import com.example.gestionempleados.adapters.EmpleadosAdapter;
 import com.example.gestionempleados.models.Empleado;
 import com.example.gestionempleados.models.Gerente;
 import com.example.gestionempleados.models.Tecnico;
 import com.example.gestionempleados.models.TecnicoSenior;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +33,9 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
     private RecyclerView recyclerView;
     private EmpleadosAdapter adapter;
     private List<Empleado> empleados;
+    private ProgressBar progressBar;
+    private RequestQueue requestQueue;
+    private static final String API_URL = "https://raw.githubusercontent.com/adancondori/TareaAPI/refs/heads/main/api/empleados.json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,34 +43,137 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
         setContentView(R.layout.activity_lista_empleados);
 
         recyclerView = findViewById(R.id.recyclerView);
+        progressBar = findViewById(R.id.progressBar);
+
+        // Inicializar Volley Request Queue
+        requestQueue = Volley.newRequestQueue(this);
 
         // Inicializar la lista de empleados
-        initEmpleados();
+        empleados = new ArrayList<>();
 
         // Configurar el RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new EmpleadosAdapter(empleados, this);
         recyclerView.setAdapter(adapter);
+
+        // Cargar datos desde la API
+        cargarEmpleadosDesdeAPI();
     }
 
-    private void initEmpleados() {
-        empleados = new ArrayList<>();
+    private void cargarEmpleadosDesdeAPI() {
+        // Mostrar ProgressBar
+        progressBar.setVisibility(View.VISIBLE);
 
-        // Agregar empleados de ejemplo (al menos 5 objetos, uno de cada tipo)
-        empleados.add(new Gerente("G001", "Ana", "García", 5000.0, "01/01/2020",
-                "Recursos Humanos", 1000.0, 5));
+        // Limpiar lista actual si es necesario
+        empleados.clear();
 
-        empleados.add(new Gerente("G002", "Carlos", "Martínez", 5500.0, "15/03/2019",
-                "Ventas", 1200.0, 8));
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                API_URL,
+                null,
+                response -> {
+                    try {
+                        // Verificar que la respuesta sea exitosa
+                        String status = response.getString("status");
+                        if (status.equals("ok")) {
+                            // Obtener array de empleados
+                            JSONArray empleadosArray = response.getJSONArray("empleados");
 
-        empleados.add(new Tecnico("T001", "Laura", "Pérez", 3000.0, "10/06/2021",
-                "Informática", "Nivel 2", 10));
+                            // Procesar cada empleado
+                            for (int i = 0; i < empleadosArray.length(); i++) {
+                                JSONObject empleadoJson = empleadosArray.getJSONObject(i);
+                                procesarEmpleado(empleadoJson);
+                            }
 
-        empleados.add(new Tecnico("T002", "Miguel", "López", 3200.0, "22/09/2020",
-                "Electrónica", "Nivel 3", 15));
+                            // Notificar al adaptador sobre los cambios
+                            adapter.notifyDataSetChanged();
+                        } else {
+                            Toast.makeText(this, "Error en la respuesta de la API", Toast.LENGTH_SHORT).show();
+                        }
 
-        empleados.add(new TecnicoSenior("TS001", "Pablo", "Sánchez", 4000.0, "05/04/2018",
-                "Desarrollo Web", "Nivel 4", 20, 12, 25));
+                        // Ocultar ProgressBar
+                        progressBar.setVisibility(View.GONE);
+
+                    } catch (JSONException e) {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(this, "Error al procesar datos: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Error de red: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        // Añadir solicitud a la cola
+        requestQueue.add(request);
+    }
+
+    private void procesarEmpleado(JSONObject empleadoJson) throws JSONException {
+        int id = empleadoJson.getInt("id");
+        String nombre = empleadoJson.getString("nombre");
+        String apellido = empleadoJson.getString("apellido");
+        double salarioBase = empleadoJson.getDouble("salarioBase");
+        String fechaContratacion = empleadoJson.getString("fechaContratacion");
+        String tipo = empleadoJson.getString("tipo");
+
+        // Crear empleado según su tipo
+        switch (tipo) {
+            case "Gerente":
+                String departamento = empleadoJson.getString("departamento");
+                double bonoAnual = empleadoJson.getDouble("bonoAnual");
+                int cantidadSubordinados = empleadoJson.getInt("cantidadSubordinados");
+
+                empleados.add(new Gerente(
+                        String.valueOf(id),
+                        nombre,
+                        apellido,
+                        salarioBase,
+                        fechaContratacion,
+                        departamento,
+                        bonoAnual,
+                        cantidadSubordinados
+                ));
+                break;
+
+            case "Tecnico":
+                String especialidadTecnico = empleadoJson.getString("especialidad");
+                String nivelCertificacionTecnico = empleadoJson.getString("nivelCertificacion");
+                int horasExtraTecnico = empleadoJson.getInt("horasExtra");
+
+                empleados.add(new Tecnico(
+                        String.valueOf(id),
+                        nombre,
+                        apellido,
+                        salarioBase,
+                        fechaContratacion,
+                        especialidadTecnico,
+                        nivelCertificacionTecnico,
+                        horasExtraTecnico
+                ));
+                break;
+
+            case "TecnicoSenior":
+                String especialidadSenior = empleadoJson.getString("especialidad");
+                String nivelCertificacionSenior = empleadoJson.getString("nivelCertificacion");
+                int horasExtraSenior = empleadoJson.getInt("horasExtra");
+                int proyectosCompletados = empleadoJson.getInt("proyectosCompletados");
+                int clientesAtendidos = empleadoJson.getInt("clientesAtendidos");
+
+                empleados.add(new TecnicoSenior(
+                        String.valueOf(id),
+                        nombre,
+                        apellido,
+                        salarioBase,
+                        fechaContratacion,
+                        especialidadSenior,
+                        nivelCertificacionSenior,
+                        horasExtraSenior,
+                        proyectosCompletados,
+                        clientesAtendidos
+                ));
+                break;
+        }
     }
 
     @Override

@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Añadir permisos de Internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,27 +16,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GestionEmpleados"
         tools:targetApi="31">
-        <activity
-            android:name=".activities.DetalleEmpleadoActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activities.ListaEmpleadosActivity"
-            android:exported="false" />
-        <activity
-            android:name=".models.EmpleadoItem"
-            android:exported="false" />
-        <activity
-            android:name=".activities.EmpleadoActivity"
-            android:exported="false" />
+
         <activity
             android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".activities.ListaEmpleadosActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activities.DetalleEmpleadoActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

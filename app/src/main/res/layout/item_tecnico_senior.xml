@@ -79,5 +79,6 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_info_details" />
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

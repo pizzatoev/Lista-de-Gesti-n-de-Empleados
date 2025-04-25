@@ -1,6 +1,5 @@
 package com.example.gestionempleados.models;
 
-
 public class TecnicoSenior extends Tecnico {
     private int proyectosCompletados;
     private int clientesAtendidos;
