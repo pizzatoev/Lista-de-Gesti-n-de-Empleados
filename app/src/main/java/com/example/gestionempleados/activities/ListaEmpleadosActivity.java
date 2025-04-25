@@ -25,6 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,13 +119,15 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
         String tipo = empleadoJson.getString("tipo");
 
         // Crear empleado según su tipo
+        Empleado empleado = null;
+
         switch (tipo) {
             case "Gerente":
                 String departamento = empleadoJson.getString("departamento");
                 double bonoAnual = empleadoJson.getDouble("bonoAnual");
                 int cantidadSubordinados = empleadoJson.getInt("cantidadSubordinados");
 
-                empleados.add(new Gerente(
+                empleado = new Gerente(
                         String.valueOf(id),
                         nombre,
                         apellido,
@@ -133,7 +136,7 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
                         departamento,
                         bonoAnual,
                         cantidadSubordinados
-                ));
+                );
                 break;
 
             case "Tecnico":
@@ -141,7 +144,7 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
                 String nivelCertificacionTecnico = empleadoJson.getString("nivelCertificacion");
                 int horasExtraTecnico = empleadoJson.getInt("horasExtra");
 
-                empleados.add(new Tecnico(
+                empleado = new Tecnico(
                         String.valueOf(id),
                         nombre,
                         apellido,
@@ -150,7 +153,7 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
                         especialidadTecnico,
                         nivelCertificacionTecnico,
                         horasExtraTecnico
-                ));
+                );
                 break;
 
             case "TecnicoSenior":
@@ -160,7 +163,7 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
                 int proyectosCompletados = empleadoJson.getInt("proyectosCompletados");
                 int clientesAtendidos = empleadoJson.getInt("clientesAtendidos");
 
-                empleados.add(new TecnicoSenior(
+                empleado = new TecnicoSenior(
                         String.valueOf(id),
                         nombre,
                         apellido,
@@ -171,8 +174,35 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
                         horasExtraSenior,
                         proyectosCompletados,
                         clientesAtendidos
-                ));
+                );
                 break;
+        }
+
+        // Si se creó el empleado correctamente, procesar información adicional
+        if (empleado != null) {
+            // Procesar información adicional
+            if (empleadoJson.has("informacionAdicional")) {
+                JSONObject infoAdicionalJson = empleadoJson.getJSONObject("informacionAdicional");
+
+                // Esperanza de vida
+                if (infoAdicionalJson.has("esperanzaVida")) {
+                    empleado.setEsperanzaVida(infoAdicionalJson.getInt("esperanzaVida"));
+                }
+
+                // Datos adicionales
+                if (infoAdicionalJson.has("datos")) {
+                    JSONArray datosArray = infoAdicionalJson.getJSONArray("datos");
+                    for (int i = 0; i < datosArray.length(); i++) {
+                        JSONObject datoJson = datosArray.getJSONObject(i);
+                        String nombreDato = datoJson.getString("nombreDato");
+                        String valorDato = datoJson.getString("valor");
+                        empleado.addDato(nombreDato, valorDato);
+                    }
+                }
+            }
+
+            // Añadir el empleado a la lista
+            empleados.add(empleado);
         }
     }
 
@@ -187,6 +217,16 @@ public class ListaEmpleadosActivity extends AppCompatActivity implements Emplead
         intent.putExtra("EMPLEADO_APELLIDO", empleado.getApellido());
         intent.putExtra("EMPLEADO_SALARIO", empleado.getSalarioBase());
         intent.putExtra("EMPLEADO_FECHA", empleado.getFechaContratacion());
+
+        // Pasar información adicional
+        intent.putExtra("EMPLEADO_ESPERANZA_VIDA", empleado.getEsperanzaVida());
+
+        // Pasar listas de datos adicionales como Serializable
+        ArrayList<String> nombresDatos = new ArrayList<>(empleado.getNombresDatos());
+        ArrayList<String> valoresDatos = new ArrayList<>(empleado.getValoresDatos());
+
+        intent.putExtra("EMPLEADO_NOMBRES_DATOS", (Serializable) nombresDatos);
+        intent.putExtra("EMPLEADO_VALORES_DATOS", (Serializable) valoresDatos);
 
         // Determinar el tipo de empleado
         if (empleado instanceof Gerente) {

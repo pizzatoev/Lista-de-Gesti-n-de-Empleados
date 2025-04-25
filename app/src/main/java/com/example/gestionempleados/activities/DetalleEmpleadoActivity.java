@@ -10,6 +10,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.gestionempleados.R;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+
 public class DetalleEmpleadoActivity extends AppCompatActivity {
 
     @Override
@@ -40,6 +43,37 @@ public class DetalleEmpleadoActivity extends AppCompatActivity {
             tvId.setText(id);
             tvFechaContratacion.setText(fecha);
             tvSalarioBase.setText("$" + String.format("%.2f", salario));
+
+            // Mostrar información adicional
+            int esperanzaVida = extras.getInt("EMPLEADO_ESPERANZA_VIDA", 0);
+            TextView tvEsperanzaVida = findViewById(R.id.tvEsperanzaVida);
+            tvEsperanzaVida.setText(esperanzaVida + " años");
+
+            // Mostrar datos adicionales
+            // Usando Serializable para mayor compatibilidad
+            ArrayList<String> nombresDatos = (ArrayList<String>) extras.getSerializable("EMPLEADO_NOMBRES_DATOS");
+            ArrayList<String> valoresDatos = (ArrayList<String>) extras.getSerializable("EMPLEADO_VALORES_DATOS");
+
+            if (nombresDatos != null && valoresDatos != null && nombresDatos.size() == valoresDatos.size()) {
+                LinearLayout contenedorDatos = findViewById(R.id.contenedorDatos);
+
+                for (int i = 0; i < nombresDatos.size(); i++) {
+                    String nombreDato = nombresDatos.get(i);
+                    String valorDato = valoresDatos.get(i);
+
+                    // Crear vista para el dato
+                    View datosView = LayoutInflater.from(this).inflate(R.layout.item_dato, contenedorDatos, false);
+
+                    // Actualizar datos
+                    TextView tvNombreDato = datosView.findViewById(R.id.tvNombreDato);
+                    TextView tvValorDato = datosView.findViewById(R.id.tvValorDato);
+
+                    tvNombreDato.setText(nombreDato + ":");
+                    tvValorDato.setText(valorDato);
+
+                    contenedorDatos.addView(datosView);
+                }
+            }
 
             // Contenedor para datos específicos
             LinearLayout contenedorEspecifico = findViewById(R.id.contenedorEspecifico);

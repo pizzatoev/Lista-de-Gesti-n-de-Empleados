@@ -123,8 +123,29 @@
                     android:id="@+id/tvSalarioBase"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     tools:text="$3500.00" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Esperanza de vida:"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEsperanzaVida"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    tools:text="80 años" />
+
+                <!-- Contenedor para datos adicionales dinámicos -->
+                <LinearLayout
+                    android:id="@+id/contenedorDatos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="16dp" />
 
                 <TextView
                     android:id="@+id/tvTituloEspecifico"
